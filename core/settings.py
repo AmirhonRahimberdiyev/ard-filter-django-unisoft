@@ -53,7 +53,15 @@ SECRET_KEY = 'django-insecure-&nr4b1ihkw@it-5dt)0p+=9e)9o4%am28y_o0!kl^5*wcvega_
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# Удобная разработка: любой Host (LAN, 127.0.0.1, имя ПК). В проде задайте DJANGO_ALLOWED_HOSTS.
+if DEBUG:
+    ALLOWED_HOSTS = ['*']
+else:
+    ALLOWED_HOSTS = [
+        h.strip()
+        for h in os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',')
+        if h.strip()
+    ]
 
 
 # Application definition
@@ -65,7 +73,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'app',
+    'app.apps.AppConfig',
 ]
 
 MIDDLEWARE = [

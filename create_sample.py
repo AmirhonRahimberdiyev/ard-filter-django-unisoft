@@ -1,4 +1,8 @@
+from pathlib import Path
+
 import pandas as pd
+
+ROOT = Path(__file__).resolve().parent
 
 data = {
     'card_number': [
@@ -54,5 +58,6 @@ data = {
 }
 
 df = pd.DataFrame(data)
-df.to_excel('sample_cards.xlsx', index=False)
-print("Created sample_cards.xlsx")
+out = ROOT / 'sample_cards.xlsx'
+df.to_excel(out, index=False)
+print(f'Created {out}')
