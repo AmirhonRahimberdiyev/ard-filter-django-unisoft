@@ -16,7 +16,7 @@ Django training project: **bank cards** admin workflow, **Excel import**, **CSV 
 ## Requirements
 
 - Python 3.12+ (tested with Django 6.x)
-- Dependencies: see `requirements.txt` (`Django`, `pandas`, `openpyxl`, `aiogram`)
+- Dependencies: see `requirements.txt` (`Django`, `pandas`, `openpyxl`, `aiogram`, `python-dotenv`)
 
 ## Setup
 
@@ -34,7 +34,9 @@ python manage.py runserver
 
 ## Environment variables
 
-Create a **local** `.env` or set variables in your shell (never commit real tokens to git).
+Create a **local** `.env` in the project root (same folder as `manage.py`). The app loads it automatically via **`python-dotenv`** when you run `manage.py`, `bot/bot.py`, or WSGI/ASGI (so you usually do not need to `export` variables manually).
+
+Never commit real tokens to git (`.env` is gitignored).
 
 | Variable | Purpose |
 |----------|---------|

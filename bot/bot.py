@@ -1,8 +1,8 @@
 """
 Telegram bot: card lookup and linking chat_id for outbound notifications.
 
-Run from project root (after migrate):
-  set TELEGRAM_BOT_TOKEN=...
+Run from project root (after migrate). Loads `.env` from project root via python-dotenv:
+  TELEGRAM_BOT_TOKEN=... in .env
   python bot/bot.py
 """
 from __future__ import annotations
@@ -14,6 +14,11 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE_DIR))
+
+from dotenv import load_dotenv
+
+load_dotenv(BASE_DIR / '.env')
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 
 import django
@@ -32,7 +37,7 @@ from app.services import prepare_message, send_message
 TOKEN = (getattr(settings, 'TELEGRAM_BOT_TOKEN', '') or '').strip()
 if not TOKEN:
     raise RuntimeError(
-        'Set TELEGRAM_BOT_TOKEN (or BOT_TOKEN) in the environment before starting the bot.'
+        'Set TELEGRAM_BOT_TOKEN (or BOT_TOKEN) in .env at project root or in the environment.'
     )
 
 bot = Bot(token=TOKEN)
