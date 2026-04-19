@@ -36,6 +36,10 @@ def prepare_message(
         return (
             f'Sizning kartangiz {display} aktiv va foydalanishga {bal} UZS mavjud!'
         )
+    if lang == 'RU':
+        return (
+            f'Ваша карта {display} активна. Доступно для использования: {bal} UZS.'
+        )
     return f'Ваша карта {display} активна и доступно {bal} UZS!'
 
 
