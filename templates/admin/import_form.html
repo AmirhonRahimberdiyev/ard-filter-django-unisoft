@@ -1,0 +1,13 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+<div id="content-main">
+    <h2>Import Cards from Excel</h2>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="default" name="_save">Import</button>
+        <a href="../" class="button">Cancel</a>
+    </form>
+</div>
+{% endblock %}
