@@ -17,7 +17,8 @@ sys.path.insert(0, str(BASE_DIR))
 
 from dotenv import load_dotenv
 
-load_dotenv(BASE_DIR / '.env')
+_ENV_PATH = BASE_DIR / '.env'
+_DOTENV_LOADED = load_dotenv(_ENV_PATH, override=True)
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 
@@ -37,7 +38,9 @@ from app.services import prepare_message, send_message
 TOKEN = (getattr(settings, 'TELEGRAM_BOT_TOKEN', '') or '').strip()
 if not TOKEN:
     raise RuntimeError(
-        'Set TELEGRAM_BOT_TOKEN (or BOT_TOKEN) in .env at project root or in the environment.'
+        'Missing TELEGRAM_BOT_TOKEN. Expected a line like TELEGRAM_BOT_TOKEN=123456:ABC... '
+        f'in "{_ENV_PATH}" (file exists: {_ENV_PATH.exists()}, dotenv loaded: {_DOTENV_LOADED}). '
+        'Remove any empty TELEGRAM_BOT_TOKEN from Windows environment variables if set.'
     )
 
 bot = Bot(token=TOKEN)

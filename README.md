@@ -38,6 +38,8 @@ Create a **local** `.env` in the project root (same folder as `manage.py`). The 
 
 Never commit real tokens to git (`.env` is gitignored).
 
+If the bot still says the token is missing: put `.env` next to `manage.py` (not inside `bot/`). Use the exact name `TELEGRAM_BOT_TOKEN` (no spaces around `=`). On Windows, remove a user/system env var `TELEGRAM_BOT_TOKEN` if it is set but empty — otherwise `.env` would be ignored until we use `override=True` (now enabled).
+
 | Variable | Purpose |
 |----------|---------|
 | `TELEGRAM_BOT_TOKEN` | Bot token from [@BotFather](https://t.me/BotFather). Alias: `BOT_TOKEN`. |

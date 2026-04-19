@@ -13,11 +13,17 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+load_dotenv(BASE_DIR / '.env', override=True)
+
 # Telegram (never commit real tokens; use environment variables)
-TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN') or os.environ.get('BOT_TOKEN', '')
+TELEGRAM_BOT_TOKEN = (
+    (os.environ.get('TELEGRAM_BOT_TOKEN') or os.environ.get('BOT_TOKEN') or '').strip()
+)
 # Optional: receive bulk notifications when a card has no telegram_chat_id
 TELEGRAM_DEFAULT_CHAT_ID = None
 _tg_default = os.environ.get('TELEGRAM_DEFAULT_CHAT_ID', '').strip()
