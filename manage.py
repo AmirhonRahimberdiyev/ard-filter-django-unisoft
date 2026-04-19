@@ -6,7 +6,11 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv(Path(__file__).resolve().parent / '.env', override=True)
+load_dotenv(
+    Path(__file__).resolve().parent / '.env',
+    override=True,
+    encoding='utf-8-sig',
+)
 
 
 def main():

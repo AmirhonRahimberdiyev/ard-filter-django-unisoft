@@ -38,7 +38,7 @@ Create a **local** `.env` in the project root (same folder as `manage.py`). The 
 
 Never commit real tokens to git (`.env` is gitignored).
 
-If the bot still says the token is missing: put `.env` next to `manage.py` (not inside `bot/`). Use the exact name `TELEGRAM_BOT_TOKEN` (no spaces around `=`). On Windows, remove a user/system env var `TELEGRAM_BOT_TOKEN` if it is set but empty — otherwise `.env` would be ignored until we use `override=True` (now enabled).
+If the bot still says the token is missing: put `.env` next to `manage.py` (not inside `bot/`). Use the exact name `TELEGRAM_BOT_TOKEN` (no spaces around `=`). Save `.env` as **UTF-8** (Notepad “UTF-8” or “UTF-8 with BOM” both work). Do **not** import `core.settings` at the top of `bot/bot.py` before `load_dotenv` — that loads Django before `.env` is applied. On Windows, remove an empty user/system `TELEGRAM_BOT_TOKEN` if present; `.env` uses `override=True` so a filled `.env` wins.
 
 | Variable | Purpose |
 |----------|---------|

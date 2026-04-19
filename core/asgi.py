@@ -13,7 +13,11 @@ from pathlib import Path
 from django.core.asgi import get_asgi_application
 from dotenv import load_dotenv
 
-load_dotenv(Path(__file__).resolve().parent.parent / '.env', override=True)
+load_dotenv(
+    Path(__file__).resolve().parent.parent / '.env',
+    override=True,
+    encoding='utf-8-sig',
+)
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 
 application = get_asgi_application()

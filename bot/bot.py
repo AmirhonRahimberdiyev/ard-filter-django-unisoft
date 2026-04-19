@@ -17,8 +17,10 @@ sys.path.insert(0, str(BASE_DIR))
 
 from dotenv import load_dotenv
 
+# load_dotenv must run before django.setup() / core.settings (so .env is applied first).
+
 _ENV_PATH = BASE_DIR / '.env'
-_DOTENV_LOADED = load_dotenv(_ENV_PATH, override=True)
+_DOTENV_LOADED = load_dotenv(_ENV_PATH, override=True, encoding='utf-8-sig')
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 

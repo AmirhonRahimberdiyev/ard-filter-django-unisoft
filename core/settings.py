@@ -18,12 +18,22 @@ from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-load_dotenv(BASE_DIR / '.env', override=True)
+load_dotenv(BASE_DIR / '.env', override=True, encoding='utf-8-sig')
+
+
+def _read_env_token(*names: str) -> str:
+    raw = ''
+    for n in names:
+        raw = (os.environ.get(n) or '').strip()
+        if raw:
+            break
+    if len(raw) >= 2 and raw[0] == raw[-1] and raw[0] in "'\"":
+        raw = raw[1:-1].strip()
+    return raw
+
 
 # Telegram (never commit real tokens; use environment variables)
-TELEGRAM_BOT_TOKEN = (
-    (os.environ.get('TELEGRAM_BOT_TOKEN') or os.environ.get('BOT_TOKEN') or '').strip()
-)
+TELEGRAM_BOT_TOKEN = _read_env_token('TELEGRAM_BOT_TOKEN', 'BOT_TOKEN')
 # Optional: receive bulk notifications when a card has no telegram_chat_id
 TELEGRAM_DEFAULT_CHAT_ID = None
 _tg_default = os.environ.get('TELEGRAM_DEFAULT_CHAT_ID', '').strip()
