@@ -7,8 +7,20 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--status', type=str, help='Filter by status (active, inactive, expired)')
-        parser.add_argument('--card-number', type=str, help='Filter by card number (partial match)')
-        parser.add_argument('--phone', type=str, help='Filter by phone (partial match)')
+        parser.add_argument(
+            '--card-number',
+            type=str,
+            dest='card_number',
+            default=None,
+            help='Filter by card number (partial match)',
+        )
+        parser.add_argument(
+            '--phone',
+            type=str,
+            dest='phone',
+            default=None,
+            help='Filter by phone (partial match)',
+        )
         parser.add_argument('--output', type=str, default='cards_export.csv', help='Output file path')
 
     def handle(self, *args, **options):

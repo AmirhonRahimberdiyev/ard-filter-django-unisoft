@@ -81,13 +81,20 @@ def format_expire(raw_expire: str) -> str:
     if len(parts) != 2:
         return raw_expire
     a, b = parts
-    if len(a) == 4 and len(b) <= 2:
-        year, month = a, b
-    elif len(b) == 4 and len(a) <= 2:
-        month, year = a, b
-    else:
-        month, year = a, b
-    if len(year) == 2:
-        yi = int(year)
-        year = f'20{year}' if yi < 50 else f'19{year}'
-    return f'{year}-{month.zfill(2)}'
+    try:
+        if len(a) == 4 and len(b) <= 2:
+            year, month = a, b
+        elif len(b) == 4 and len(a) <= 2:
+            month, year = a, b
+        else:
+            month, year = a, b
+        if len(year) == 2:
+            yi = int(year)
+            mo = int(month)
+            year = f'20{year}' if yi < 50 else f'19{year}'
+            month = str(mo)
+        else:
+            int(month)
+        return f'{year}-{month.zfill(2)}'
+    except (ValueError, TypeError):
+        return raw_expire
