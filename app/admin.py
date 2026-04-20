@@ -1,12 +1,13 @@
 import io
 
 from django.contrib import admin
-from django.urls import path
-from django.shortcuts import render
 from django import forms
 from django.contrib import messages
-from django.http import HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect
 from django.db.models import Q
+from django.shortcuts import render
+from django.urls import path
+from django.utils import timezone
 
 from app.models import Card, card_mask, format_card, format_expire, format_phone, phone_mask
 from app.services import import_cards_from_excel
@@ -14,6 +15,19 @@ from app.services import import_cards_from_excel
 
 class ImportForm(forms.Form):
     excel_file = forms.FileField(label='Excel File (.xlsx)')
+
+
+class ExportForm(forms.Form):
+    status = forms.ChoiceField(
+        required=False,
+        choices=(
+            ('', 'All statuses'),
+            ('active', 'Active'),
+            ('inactive', 'Inactive'),
+            ('expired', 'Expired'),
+        ),
+        label='Status',
+    )
 
 
 class PhonePresentFilter(admin.SimpleListFilter):
@@ -87,6 +101,7 @@ class CardAdmin(admin.ModelAdmin):
         urls = super().get_urls()
         return [
             path('import/', self.import_excel, name='import_excel'),
+            path('export/', self.export_excel, name='export_excel'),
         ] + urls
 
     def save_model(self, request, obj, form, change):
@@ -115,3 +130,49 @@ class CardAdmin(admin.ModelAdmin):
             form = ImportForm()
 
         return render(request, 'admin/import_form.html', {'form': form})
+
+    def export_excel(self, request):
+        if request.method == 'POST':
+            form = ExportForm(request.POST)
+            if form.is_valid():
+                status = form.cleaned_data.get('status')
+                queryset = Card.objects.all().order_by('-created_at')
+                if status:
+                    queryset = queryset.filter(status=status)
+
+                import pandas as pd
+
+                rows = [
+                    {
+                        'card_number': card.card_number,
+                        'expire': card.expire or '',
+                        'phone': card.phone or '',
+                        'status': card.status,
+                        'balance': str(card.balance),
+                        'telegram_chat_id': card.telegram_chat_id or '',
+                    }
+                    for card in queryset
+                ]
+                df = pd.DataFrame(rows)
+                output = io.BytesIO()
+                df.to_excel(output, index=False, engine='openpyxl')
+                output.seek(0)
+
+                ts = timezone.now().strftime('%Y%m%d_%H%M%S')
+                suffix = status or 'all'
+                filename = f'cards_{suffix}_{ts}.xlsx'
+                response = HttpResponse(
+                    output.read(),
+                    content_type=(
+                        'application/vnd.openxmlformats-officedocument.'
+                        'spreadsheetml.sheet'
+                    ),
+                )
+                response['Content-Disposition'] = (
+                    f'attachment; filename="{filename}"'
+                )
+                return response
+        else:
+            form = ExportForm()
+
+        return render(request, 'admin/export_form.html', {'form': form})
