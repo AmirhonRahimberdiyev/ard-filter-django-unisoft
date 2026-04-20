@@ -8,7 +8,7 @@ from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.db.models import Q
 
-from app.models import Card, card_mask, phone_mask
+from app.models import Card, card_mask, format_card, format_expire, format_phone, phone_mask
 from app.services import import_cards_from_excel
 
 
@@ -88,6 +88,16 @@ class CardAdmin(admin.ModelAdmin):
         return [
             path('import/', self.import_excel, name='import_excel'),
         ] + urls
+
+    def save_model(self, request, obj, form, change):
+        # Normalize manually entered admin data so bot/filters work consistently.
+        if obj.card_number:
+            obj.card_number = format_card(str(obj.card_number).strip())
+        if obj.phone:
+            obj.phone = format_phone(str(obj.phone).strip())
+        if obj.expire:
+            obj.expire = format_expire(str(obj.expire).strip())
+        super().save_model(request, obj, form, change)
 
     def import_excel(self, request):
         if request.method == 'POST':

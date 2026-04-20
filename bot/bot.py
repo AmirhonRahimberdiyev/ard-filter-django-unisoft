@@ -35,6 +35,7 @@ from aiogram.filters import Command, CommandObject
 from aiogram.types import BotCommand, KeyboardButton, Message, ReplyKeyboardMarkup
 from asgiref.sync import sync_to_async
 from django.conf import settings
+from django.db.models import Q
 
 from app.models import Card, card_mask, format_card
 from app.services import prepare_message, send_message
@@ -80,13 +81,18 @@ def _digits_16(text: str) -> str | None:
 
 
 @sync_to_async
-def _get_card(formatted: str) -> Card | None:
-    return Card.objects.filter(card_number=formatted).first()
+def _get_card(formatted: str, digits: str) -> Card | None:
+    # Support cards saved either as "8600 1234 ..." or "86001234..."
+    return Card.objects.filter(
+        Q(card_number=formatted) | Q(card_number=digits)
+    ).first()
 
 
 @sync_to_async
-def _link_card(formatted: str, chat_id: int) -> tuple[bool, str]:
-    n = Card.objects.filter(card_number=formatted).update(telegram_chat_id=chat_id)
+def _link_card(formatted: str, digits: str, chat_id: int) -> tuple[bool, str]:
+    n = Card.objects.filter(
+        Q(card_number=formatted) | Q(card_number=digits)
+    ).update(telegram_chat_id=chat_id)
     if not n:
         return False, 'Карта с таким номером не найдена в базе.'
     return (
@@ -162,7 +168,7 @@ async def link_handler(message: Message, command: CommandObject):
         )
         return
     formatted = format_card(digits)
-    _ok, text = await _link_card(formatted, message.chat.id)
+    _ok, text = await _link_card(formatted, digits, message.chat.id)
     await message.answer(text, reply_markup=main_reply_keyboard())
 
 
@@ -196,7 +202,7 @@ async def card_lookup_handler(message: Message):
         return
 
     formatted = format_card(digits)
-    card = await _get_card(formatted)
+    card = await _get_card(formatted, digits)
     if not card:
         await message.answer(
             '🔍 Карта с таким номером <b>не найдена</b> в базе.',
