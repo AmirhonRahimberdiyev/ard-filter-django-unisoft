@@ -10,7 +10,25 @@ from django.urls import path
 from django.utils import timezone
 
 from app.models import Card, card_mask, format_card, format_expire, format_phone, phone_mask
-from app.services import import_cards_from_excel
+from importlib import import_module
+from pathlib import Path
+from pkgutil import walk_packages
+
+
+def import_cards_from_excel(*args, **kwargs):
+    services_dir = Path(__file__).resolve().parent / "services"
+
+    for module_info in walk_packages([str(services_dir)], prefix="app.services."):
+        module_name = module_info.name.rsplit(".", 1)[-1]
+        if module_name.startswith("_"):
+            continue
+
+        module = import_module(module_info.name)
+        func = getattr(module, "import_cards_from_excel", None)
+        if func is not None:
+            return func(*args, **kwargs)
+
+    raise ImportError("import_cards_from_excel was not found in app.services submodules")
 
 
 class ImportForm(forms.Form):

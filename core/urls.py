@@ -18,11 +18,14 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path
+
+from app.views import jsonrpc_endpoint
 from django.views.generic import RedirectView
 
 urlpatterns = [
     path('', RedirectView.as_view(url='/admin/', permanent=False), name='home'),
     path('admin/', admin.site.urls),
+    path("api/json-rpc/", jsonrpc_endpoint, name="jsonrpc-endpoint"),
 ]
 
 if settings.DEBUG:

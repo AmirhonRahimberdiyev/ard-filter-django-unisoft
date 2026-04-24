@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 import re
 
 
@@ -98,3 +99,64 @@ def format_expire(raw_expire: str) -> str:
         return f'{year}-{month.zfill(2)}'
     except (ValueError, TypeError):
         return raw_expire
+class TransferState(models.TextChoices):
+    CREATED = "created", "Created"
+    CONFIRMED = "confirmed", "Confirmed"
+    CANCELLED = "cancelled", "Cancelled"
+
+
+class Transfer(models.Model):
+    ext_id = models.CharField(max_length=255, unique=True)
+    sender_card_number = models.CharField(max_length=32)
+    receiver_card_number = models.CharField(max_length=32)
+    sender_card_expiry = models.CharField(max_length=5)
+    sender_phone = models.CharField(max_length=32, blank=True, null=True)
+    receiver_phone = models.CharField(max_length=32, blank=True, null=True)
+    sending_amount = models.DecimalField(max_digits=18, decimal_places=2)
+    currency = models.PositiveIntegerField()
+    receiving_amount = models.DecimalField(max_digits=18, decimal_places=2)
+    state = models.CharField(
+        max_length=16,
+        choices=TransferState.choices,
+        default=TransferState.CREATED,
+    )
+    try_count = models.PositiveSmallIntegerField(default=0)
+    otp = models.CharField(max_length=6, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    confirmed_at = models.DateTimeField(blank=True, null=True)
+    cancelled_at = models.DateTimeField(blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+        indexes = [
+            models.Index(fields=("ext_id",)),
+            models.Index(fields=("sender_card_number",)),
+            models.Index(fields=("receiver_card_number",)),
+            models.Index(fields=("state",)),
+            models.Index(fields=("created_at",)),
+        ]
+
+    def mark_confirmed(self):
+        self.state = TransferState.CONFIRMED
+        self.confirmed_at = timezone.now()
+
+    def mark_cancelled(self):
+        self.state = TransferState.CANCELLED
+        self.cancelled_at = timezone.now()
+
+    def __str__(self):
+        return f"{self.ext_id} [{self.state}]"
+
+
+class Error(models.Model):
+    code = models.IntegerField(unique=True)
+    en = models.CharField(max_length=255)
+    ru = models.CharField(max_length=255)
+    uz = models.CharField(max_length=255)
+
+    class Meta:
+        ordering = ("code",)
+
+    def __str__(self):
+        return f"{self.code}: {self.en}"
