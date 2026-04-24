@@ -106,6 +106,10 @@ class TransferState(models.TextChoices):
 
 
 class Transfer(models.Model):
+    class Currency(models.TextChoices):
+        UZS='uzs',"uzs"
+        USD='usd',"usd"
+        RUB='rub','rub'
     ext_id = models.CharField(max_length=255, unique=True)
     sender_card_number = models.CharField(max_length=32)
     receiver_card_number = models.CharField(max_length=32)
@@ -113,7 +117,7 @@ class Transfer(models.Model):
     sender_phone = models.CharField(max_length=32, blank=True, null=True)
     receiver_phone = models.CharField(max_length=32, blank=True, null=True)
     sending_amount = models.DecimalField(max_digits=18, decimal_places=2)
-    currency = models.PositiveIntegerField()
+    currency = models.CharField(max_length=16,choices=Currency.choices,default=Currency.UZS)
     receiving_amount = models.DecimalField(max_digits=18, decimal_places=2)
     state = models.CharField(
         max_length=16,
