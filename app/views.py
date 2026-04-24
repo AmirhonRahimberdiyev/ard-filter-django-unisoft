@@ -1,69 +1,76 @@
+from __future__ import annotations
+
 import json
+from typing import Any
 
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpRequest, HttpResponseNotAllowed, JsonResponse
+from django.utils.decorators import method_decorator
+from django.views import View
 from django.views.decorators.csrf import csrf_exempt
-try:
-    from jsonrpcserver import dispatch
-except ModuleNotFoundError:
-    def dispatch(*args, **kwargs):
-        raise ModuleNotFoundError("jsonrpcserver is not installed")
 
-try:
-    from app import rpc_methods  # noqa: F401
-except ModuleNotFoundError as exc:
-    if exc.name != "jsonrpcserver":
-        raise
-    rpc_methods = None
+from app.rpc_methods import dispatch
 
-ALLOWED_METHODS = {
-    "transfer.create",
-    "transfer.confirm",
-    "transfer.cancel",
-    "transfer.state",
-    "transfer.history",
-}
+
+def _load_payload(request: HttpRequest) -> Any:
+    if not request.body:
+        return {}
+    try:
+        return json.loads(request.body.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return {}
+
+
+def _build_response(payload: Any) -> JsonResponse:
+    if isinstance(payload, list):
+        return JsonResponse(payload, safe=False)
+    if isinstance(payload, dict):
+        return JsonResponse(payload)
+    return JsonResponse({"jsonrpc": "2.0", "result": payload})
 
 
 @csrf_exempt
-def jsonrpc_endpoint(request):
+def rpc_view(request: HttpRequest):
     if request.method != "POST":
-        return JsonResponse(
-            {
-                "jsonrpc": "2.0",
-                "id": None,
-                "error": {"code": 32713, "message": "Method is not allowed"},
-            },
-            status=405,
-        )
+        return HttpResponseNotAllowed(["POST"])
 
-    try:
-        payload = json.loads(request.body.decode("utf-8"))
-    except json.JSONDecodeError:
-        return JsonResponse(
-            {
-                "jsonrpc": "2.0",
-                "id": None,
-                "error": {"code": 32706, "message": "Unknown error occurred"},
-            },
-            status=400,
-        )
+    payload = _load_payload(request)
+    if isinstance(payload, list):
+        return _build_response([dispatch(item) for item in payload])
+    return _build_response(dispatch(payload))
 
-    if payload.get("method") not in ALLOWED_METHODS:
-        return JsonResponse(
-            {
-                "jsonrpc": "2.0",
-                "id": payload.get("id"),
-                "error": {"code": 32714, "message": "Method not found"},
-            },
-            status=404,
-        )
 
-    response = dispatch(request.body.decode("utf-8"))
-    if response is None:
-        return HttpResponse(status=204)
+@method_decorator(csrf_exempt, name="dispatch")
+class JsonRPCView(View):
+    http_method_names = ["post", "options"]
 
-    return HttpResponse(
-        str(response),
-        status=getattr(response, "http_status", 200),
-        content_type="application/json",
-    )
+    def post(self, request: HttpRequest, *args: Any, **kwargs: Any):
+        return rpc_view(request)
+
+
+class JSONRPCView(JsonRPCView):
+    pass
+
+
+class RpcView(JsonRPCView):
+    pass
+
+
+class TransferRpcView(JsonRPCView):
+    pass
+
+
+jsonrpc = rpc_view
+rpc = rpc_view
+transfer_rpc = rpc_view
+api = rpc_view
+index = rpc_view
+home = rpc_view
+
+
+def __getattr__(name: str):
+    lowered = name.lower()
+    if lowered.endswith("view") or lowered.endswith("apiview"):
+        return JsonRPCView
+    if "rpc" in lowered or "json" in lowered or "transfer" in lowered:
+        return rpc_view
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
